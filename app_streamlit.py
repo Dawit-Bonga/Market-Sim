@@ -254,6 +254,42 @@ with st.sidebar:
         format="%.2f",
     )
 
+    weights_map: Optional[dict[str, float]] = None
+    use_custom_weights = False
+    if tickers:
+        st.divider()
+        use_custom_weights = st.checkbox(
+            "Use custom portfolio weights",
+            value=False,
+            help="Specify allocation percentages per ticker (defaults to equal weights).",
+        )
+
+        if use_custom_weights:
+            st.caption("Set allocation percentages (0-100%). They will be normalized automatically.")
+            weights_map = {}
+            total_pct = 0.0
+            default_pct = round(100.0 / len(tickers), 1)
+
+            for idx, ticker in enumerate(tickers):
+                pct = st.number_input(
+                    f"{ticker} weight (%)",
+                    min_value=0.0,
+                    max_value=100.0,
+                    value=default_pct if idx == 0 else 0.0,
+                    step=1.0,
+                    key=f"weight_{ticker}",
+                    format="%.1f",
+                )
+                weights_map[ticker] = pct / 100.0
+                total_pct += pct
+
+            if abs(total_pct - 100.0) <= 0.5:
+                st.success(f"Total weights: {total_pct:.1f}%")
+            else:
+                st.warning(
+                    f"Total weights: {total_pct:.1f}% (will be normalized to 100%)."
+                )
+
     include_spy = st.checkbox("Compare against SPY benchmark", value=True)
     show_monthly = st.checkbox("Show monthly returns breakdown", value=True)
     show_data_preview = st.checkbox("Show price data preview", value=False)
@@ -290,7 +326,28 @@ else:
             st.stop()
 
         prices = prices[available_columns]
-        weights = [1 / len(available_columns)] * len(available_columns)
+
+        if use_custom_weights and weights_map:
+            raw_weights = np.array(
+                [weights_map.get(col, 0.0) for col in available_columns], dtype=float
+            )
+            total_raw = raw_weights.sum()
+            if total_raw == 0:
+                st.error(
+                    "Custom weights total 0%. Adjust the sliders so the total is greater than zero."
+                )
+                st.stop()
+            weights = (raw_weights / total_raw).tolist()
+            st.info(
+                "**Portfolio allocation:** "
+                + ", ".join(
+                    f"{ticker}: {weight:.1%}"
+                    for ticker, weight in zip(available_columns, weights)
+                )
+            )
+        else:
+            weights = [1 / len(available_columns)] * len(available_columns)
+
         equity_curve, portfolio_returns = backtest_portfolio(
             prices, weights, initial_investment
         )

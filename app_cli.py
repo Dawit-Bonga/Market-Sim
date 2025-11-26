@@ -47,6 +47,14 @@ def main():
     )
     
     parser.add_argument(
+        '--weights',
+        nargs='+',
+        type=float,
+        default=None,
+        help='Portfolio weights (must match number of tickers). If not provided, uses equal weights.'
+    )
+    
+    parser.add_argument(
         '--plot',
         action='store_true',
         help='Display visualization charts'
@@ -76,7 +84,22 @@ def main():
     
     n = len(tickers)
     
-    weights = [1 / n] * n
+    if args.weights:
+        if len(args.weights) != n:
+            print(f"Error: Number of weights ({len(args.weights)}) must match number of tickers ({n})")
+            print(f"Tickers: {tickers}")
+            print(f"Weights provided: {args.weights}")
+            return
+        
+        if any(w<0 for w in args.weights):
+            print("Error: Weights cannot be negative")
+            return
+        
+        weights = args.weights
+        print(f"\nUsing custom weights: {dict(zip(tickers, weights))}")
+    else:
+        weights = [1 / n] * n
+        print(f"\nUsing equal weights: {dict(zip(tickers, weights))}")
     
     equity_curve, port_returns = backtest_portfolio(prices, weights, initial_amount)
     

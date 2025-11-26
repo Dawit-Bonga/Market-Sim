@@ -1,6 +1,7 @@
 from data import get_price_data
 from backtest import backtest_portfolio, compute_metrics
 import argparse
+from plot import plot_equity_curves, plot_drawdown, plot_monthly_returns, create_all_charts
 
 def main():
     # tickers = ["AAPL", "OPEN", "TSLA", "SPY"]
@@ -45,12 +46,25 @@ def main():
         help='Initial investment amount (default: 10000)'
     )
     
+    parser.add_argument(
+        '--plot',
+        action='store_true',
+        help='Display visualization charts'
+    )
+    
+    parser.add_argument(
+        '--save-charts',
+        action='store_true',
+        help='Save charts to files'
+    )
+    
+    
     args = parser.parse_args()
     
     tickers = args.tickers
     start = args.start
     end = args.end
-    intial_amount = args.initial
+    initial_amount = args.initial
     
     
     
@@ -64,11 +78,11 @@ def main():
     
     weights = [1 / n] * n
     
-    equity_curve, port_returns = backtest_portfolio(prices, weights, intial_amount)
+    equity_curve, port_returns = backtest_portfolio(prices, weights, initial_amount)
     
     metrics = compute_metrics(equity_curve, port_returns)
     
-    spy_equity_curve, spy_returns = backtest_portfolio(spy_prices, [1.0], intial_amount)
+    spy_equity_curve, spy_returns = backtest_portfolio(spy_prices, [1.0], initial_amount)
     
     spy_metrics = compute_metrics(spy_equity_curve, spy_returns)
     
@@ -81,7 +95,7 @@ def main():
     
     print("=" * 70)
     print(f"Backtest Period: {start} to {end}")
-    print(f"Initial Investment: ${intial_amount:,.2f}")
+    print(f"Initial Investment: ${initial_amount:,.2f}")
     print("=" * 70)
     print(f"\nPortfolio Tickers: {', '.join(tickers)}")
     print(f"Benchmark: SPY (S&P 500)")
@@ -124,6 +138,19 @@ def main():
     outperformance_pct = (portfolio_final / spy_final - 1) * 100
     
     print(f"\nOutperformance: ${outperformance:,.2f} ({outperformance_pct:+.2f}%)")
+    
+    if args.plot or args.save_charts:
+        print("\n" + "=" * 70)
+        print("Generating visualizations...")
+        print("=" * 70)
+        
+        if args.save_charts:
+            create_all_charts(equity_curve, spy_equity_curve, port_returns, spy_returns, tickers, start, end)
+        else:
+            plot_equity_curves(equity_curve, spy_equity_curve, tickers, start, end)
+            plot_drawdown(equity_curve, spy_equity_curve)
+            plot_monthly_returns(port_returns, spy_returns)
+            
 
 
 if __name__ == "__main__":

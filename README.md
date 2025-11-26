@@ -7,9 +7,9 @@ A Python tool for backtesting investment portfolios and comparing their performa
 This project allows you to:
 
 - Download historical stock price data for any tickers
-- Backtest a portfolio with custom weights
+- Backtest a portfolio with equal weights (custom weights support coming soon)
 - Calculate key performance metrics (returns, volatility, Sharpe ratio, max drawdown)
-- Compare portfolio performance (future: visualization and SPY comparison)
+- Compare portfolio performance against SPY with visual dashboards
 
 ## Features
 
@@ -37,19 +37,33 @@ This project allows you to:
 
 ## Usage
 
-Currently, the portfolio is hardcoded in `app_cli.py`. Run:
+### Streamlit dashboard (recommended)
+
+Run an interactive dashboard with charts, data tables, and download options:
 
 ```bash
-python app_cli.py
+streamlit run app_streamlit.py
 ```
 
-This will backtest a portfolio of AAPL, OPEN, TSLA, and SPY from 2020-01-01 to 2025-01-01.
+Use the sidebar to pick tickers, change the time range, adjust the initial investment, and toggle SPY benchmarking or monthly return charts.
+
+### Command-line interface
+
+The CLI mirrors the dashboard logic for quick scripted runs:
+
+```bash
+python app_cli.py --tickers AAPL OPEN TSLA SPY --start 2020-01-01 --end 2025-01-01 --initial 25000 --plot
+```
+
+Use `python app_cli.py --help` to discover all available flags.
 
 ## Project Structure
 
 - `data.py`: Handles downloading and processing stock price data
 - `backtest.py`: Contains backtesting logic and metric calculations
-- `app_cli.py`: Main entry point for running backtests
+- `plot.py`: Matplotlib helpers for CLI plots
+- `app_cli.py`: Command-line entry point
+- `app_streamlit.py`: Interactive dashboard entry point
 
 ## Next Steps
 

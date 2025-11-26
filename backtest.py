@@ -5,7 +5,7 @@ def compute_returns(prices: pd.DataFrame):
     returns = prices.pct_change().dropna()
     return returns
 
-def backtest_portfolio(prices, weights, intial_amount = 10_000):
+def backtest_portfolio(prices, weights, initial_amount: float = 10_000):
     results = compute_returns(prices)
     
     w = np.array(weights, dtype=float)
@@ -13,7 +13,7 @@ def backtest_portfolio(prices, weights, intial_amount = 10_000):
     
     port_returns = (results * w).sum(axis=1)
     
-    equity_curve = (1 + port_returns).cumprod() * intial_amount
+    equity_curve = (1 + port_returns).cumprod() * initial_amount
     
     return equity_curve, port_returns
 
